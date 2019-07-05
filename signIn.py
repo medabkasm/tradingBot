@@ -2,30 +2,32 @@ from binance.client import Client
 import binance.exceptions as expt
 
 
-def sign_in(apiFile = False):
+def sign_in(apiFile = False ,fileName = None):
 
+
+    accountStatus = {'loginStatus':'standard' ,  # standard  user not signed in , or  signed in for signed
+                        'fileStatus':'not used' ,
+                        'system':'normal',  # for binance system , normal or maintenance
+                        'account':None,
+                        'apiStatus' : 'no exceptions '  # api status , exceptions occurs
+                    }  #   holds the client object , None for empty object , client for signed in
     if apiFile:
-        clientStatus = False
         try:
-            with open("apiKey.txt","r") as apiFile :
+            with open(fileName,"r") as apiFile :
                 (apiKeyText,apiKey) = apiFile.readline().split(":",1)
                 (secretKeyText,secretKey) = apiFile.readline().split(":",1)
-                print(apiKeyText)
-                print(apiKey)
-                print(secretKeyText)
-                print(secretKey)
+                print(apiKeyText + ' : ' + apiKey)
+                print(secretKeyText + ' : ' + secretKey)
+                accountStatus['fileStatus'] = 'used'
+
         except IOError as ioError:
             print('Error :: File : {} .'.format(str(ioError)))
-            return False
+            accountStatus['fileStatus'] = 'Error :: '+ str(ioError)
+            return accountStatus
 
-        if apiKeyText == "API_KEY" and secretKey == "SECRET_KEY" :
-            try:
-                client = Client(apiKey.rstrip(),secretKey.rstrip())
-                clientStatus = True
+        if apiKeyText == "API_KEY" and secretKeyText == "SECRET_KEY" :
+           client = Client(apiKey.rstrip(),secretKey.rstrip())
 
-            except:
-                print(' Error : Account can''t be opened correctelly .')
-                pass
         else:
             print('Error : File structure is not correct .')
             print('You need to enter your api key and secret key manually .')
@@ -36,24 +38,24 @@ def sign_in(apiFile = False):
     else:
         apiKey = input('API KEY : ')
         secretKey = input('SECRET KEY : ')
-        try:
-            client = Client(apiKey.rstrip(),secretKey.rstrip())
-            clientStatus = True
-
-        except:
-            print(' Error :: Account can''t be opened be opened correctelly . ')
-            pass
+        client = Client(apiKey.rstrip(),secretKey.rstrip())
 
     status = client.get_system_status()
     if(status['status'] == 1 ):
-        print('Error :: System Status : '+ status['msg'])
-        return False
+        accountStatus['apiStatus'] = status['msg']
+        return accountStatus
     else:
         try:
             state = client.get_account()
-        except expt.BinanceAPIException as err:
-            print('Error :: '+str(err) + '.')
-        except expt.BinanceRequestException as err:
-            print('Error :: '+str(err) + '.')
+            accountStatus['loginStatus'] = 'signed'
+            accountStatus['account'] = client
 
-        return client
+        except expt.BinanceAPIException as err:
+            accountStatus['apiStatus'] = str(err) 
+            return accountStatus
+        except expt.BinanceRequestException as err:
+            accountStatus['apiStatus'] = str(err) 
+            return accountStatus
+
+        print(' Account :: signed in succesfully .')
+        return accountStatus
