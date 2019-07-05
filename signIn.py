@@ -21,7 +21,6 @@ def sign_in(apiFile = False ,fileName = None):
                 accountStatus['fileStatus'] = 'used'
 
         except IOError as ioError:
-            print('Error :: File : {} .'.format(str(ioError)))
             accountStatus['fileStatus'] = 'Error :: '+ str(ioError)
             return accountStatus
 
@@ -51,11 +50,11 @@ def sign_in(apiFile = False ,fileName = None):
             accountStatus['account'] = client
 
         except expt.BinanceAPIException as err:
-            accountStatus['apiStatus'] = str(err) 
+            accountStatus['apiStatus'] = str(err)
             return accountStatus
         except expt.BinanceRequestException as err:
-            accountStatus['apiStatus'] = str(err) 
+            accountStatus['apiStatus'] = str(err)
             return accountStatus
 
-        print(' Account :: signed in succesfully .')
-        return accountStatus
+    print(' Account :: signed in succesfully .')
+    return accountStatus
